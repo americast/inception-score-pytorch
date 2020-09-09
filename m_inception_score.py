@@ -60,17 +60,46 @@ def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
 
     # Now compute the mean kl-div
     split_scores = []
+    classes = range(1000)
+    classes = [str(x) for x in classes]
 
-    for k in tqdm(range(splits)):
-        part = preds[k * (N // splits): (k+1) * (N // splits), :]
-        py = np.mean(part, axis=0)
-        scores = []
-        for i in range(part.shape[0]):
-            pyx = part[i, :]
-            scores.append(entropy(pyx, py))
-        split_scores.append(np.exp(np.mean(scores)))
+    splits=1000          # the number of splits to average the score over
+    print(preds)        # Predicted labels using the output of the transfer learnt architecture
+    scores = []
+    argmax = preds.argmax(axis=1)
+    # Calculating the inception score
+    for i in tqdm(range(splits)):
+        part = preds[argmax==i]
+        logp= np.log(part)
+        self = np.sum(part*logp,axis=1)
+        cross = np.mean(np.dot(part,np.transpose(logp)),axis=1)
+        diff = self - cross
+        kl = np.mean(self - cross)
+        if kl != kl:
+            continue
+        # kl1 = []
+        # for j in range(splits):
+        #     diffj = diff[(j * diff.shape[0] // splits):((j+ 1) * diff.shape[0] //splits)]
+        #     kl1.append(np.exp(diffj.mean()))
+        # print("category: %s scores_mean = %.2f, scores_std = %.2f" % (classes[i], np.mean(kl1),np.std(kl1)))
+        scores.append(np.exp(kl))
+    pu.db
+    print("scores_mean = %.2f, scores_std = %.2f" % (np.mean(scores),
+                                                     np.std(scores)))
 
-    return np.mean(split_scores), np.std(split_scores)
+
+
+    # for k in tqdm(range(splits)):
+    #     pu.db
+    #     part = preds[k * (N // splits): (k+1) * (N // splits), :]
+    #     py = np.mean(part, axis=0)
+    #     scores = []
+    #     for i in range(part.shape[0]):
+    #         pyx = part[i, :]
+    #         scores.append(entropy(pyx, py))
+    #     split_scores.append(np.exp(np.mean(scores)))
+
+    return
 
 if __name__ == '__main__':
     class IgnoreLabelDataset(torch.utils.data.Dataset):
@@ -127,9 +156,10 @@ if __name__ == '__main__':
     # )
 
     # x = IgnoreLabelDataset(cifar)
-    txt = "../pic_list/[]~['Smiling', 'Male']"
-    # x = Dataset_manual(txt)
-    x = Dataset_list(txt)
+    txt = "../pictures/female_neutral_1000"
+    # txt = "../pic_list/['Male']~['Smiling']"
+    x = Dataset_manual(txt)
+    # x = Dataset_list(txt)
     print ("Calculating Inception Score...")
-    print (inception_score(x, cuda=False, batch_size=32, resize=True, splits=10))
+    inception_score(x, cuda=False, batch_size=32, resize=True, splits=10)
     print(txt.split("/")[-1])

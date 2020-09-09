@@ -67,7 +67,7 @@ def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
         scores = []
         for i in range(part.shape[0]):
             pyx = part[i, :]
-            scores.append(entropy(pyx, py))
+            scores.append(entropy(py, pyx) + entropy(pyx))
         split_scores.append(np.exp(np.mean(scores)))
 
     return np.mean(split_scores), np.std(split_scores)
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     # )
 
     # x = IgnoreLabelDataset(cifar)
-    txt = "../pic_list/[]~['Smiling', 'Male']"
+    txt = "../pic_list/['Smiling', 'Male']~[]"
     # x = Dataset_manual(txt)
     x = Dataset_list(txt)
     print ("Calculating Inception Score...")
